@@ -1,0 +1,36 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.css">
+  </head>
+
+  <body ng-app="wizardApp">
+
+    <div ng-controller="wizardButtonCtrl">
+      <md-button class="md-raised" ng-click="showDialog()">Click me!</md-button>
+
+      <div layout="row" layout-wrap>
+
+        <md-card class=".exampleCard" ng-repeat="client in clients" >
+          <md-card-contents>
+            Sex: {{client.sex}}<br/>
+            Age: {{client.age}}
+          </md-card-contents>
+
+          <md-card-footer class="md-headline">
+            {{client.firstName}} {{client.lastName}}
+          </md-card-footer>
+        </md-card>
+
+      </div>
+
+    </div>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-animate.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-aria.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-messages.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.js"></script>
+
+    <script src="app.js"></script>
+  </body>
+</html>
