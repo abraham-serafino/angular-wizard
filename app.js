@@ -1,4 +1,4 @@
-angular.module('wizardApp', ['ngMaterial', 'wizardExample'])
+angular.module('wizardApp', ['ngMaterial', 'wizardDirective'])
 
   .controller('wizardButtonCtrl', ['$mdDialog', '$scope',
       function ($mdDialog, $scope) {
@@ -7,18 +7,17 @@ angular.module('wizardApp', ['ngMaterial', 'wizardExample'])
 
     $scope.showDialog = function () {
 
-      $scope.client = { sex: '' };
+      $scope.client = { sex: 'Male' };
 
       $mdDialog.show({
-        parent: angular.element(document.body),
         autoWrap: false,
         scope: $scope,
         preserveScope: true,
 
         template:
-          '<example-wizard height="195px" width="750px" datamodel="client">' +
+          '<wizard>' +
 
-          '  <wizard-step title="Client Name" name="name" next="sex"' +
+          '  <step title="Client Name" name="name" next="sex"' +
           '      next-title="Change Sex">' +
 
           '    <md-input-container>' +
@@ -32,57 +31,44 @@ angular.module('wizardApp', ['ngMaterial', 'wizardExample'])
           '      <input type="text" aria-label="last name"' +
           '        ng-model="client.lastName">' +
           '    </md-input-container>' +
-          '  </wizard-step>' +
+          '  </step>' +
 
-          '  <wizard-step title="Client Sex" name="sex" previous="name"' +
+          '  <step title="Client Sex" name="sex" previous="name"' +
           '      previous-title="Change Name" next="age"' +
           '      next-title="Change Age">' +
 
           '    <md-input-container>' +
+          '      <md-label>Choose one -</md-label>' +
           '      <md-select aria-label="sex" ng-model="client.sex">' +
-          '        <md-select-header><span> Choose one - </span>' +
-          '        </md-select-header>' +
-
           '        <md-option value="Male">Male</md-option>' +
           '        <md-option value="Female">Female</md-option>' +
           '      </md-select>' +
           '    </md-input-container>' +
-          '  </wizard-step>' +
+          '  </step>' +
 
-          '  <wizard-step title="Client Age" name="age" previous="sex"' +
+          '  <step title="Client Age" name="age" previous="sex"' +
           '      previous-title="Change Sex" include-finish="Save Client">' +
 
-          '  <div layout="row">' +
-//          '    <div layout="column">' +
+          '    <md-input-container>' +
+          '      <md-label>Age (enter a value between 0-130)</md-label>' +
           '      <input type="number" aria-label="age" min="0" max="130"' +
           '        ng-model="client.age">' +
-//          '    </div>' +
-          '  </div>' +
+          '    </md-input-container>' +
 
-          '  </wizard-step>' +
-          '</example-wizard>'
+          '  </step>' +
+          '</wizard>'
 
-      }).then(function (data) {
-        $scope.clients.push(data);
-
-        console.log(data.firstName + ' ' + data.lastName);
-        console.log($scope.clients[0].firstName + ' '
-          + $scope.clients[0].lastName);
+      }).then(function () {
+        $scope.clients.push($scope.client);
       });
-    };
 
+    };
   }]);
 
-angular.module('wizardExample', ['ngMaterial'])
+angular.module('wizardDirective', ['ngMaterial'])
 
-  .component('exampleWizard', {
+  .component('wizard', {
     transclude: true,
-
-    bindings: {
-      width: '@',
-      height: '@',
-      datamodel: '='
-    },
 
     controller: function () {
       var steps = this.steps = [];
@@ -106,15 +92,14 @@ angular.module('wizardExample', ['ngMaterial'])
     },
 
     template:
-      '<md-dialog style="height: {{$ctrl.height}}; width: {{$ctrl.width}};"' +
-      '  ng-transclude></md-dialog>'
+      '<md-dialog flex="100" ng-transclude></md-dialog>'
   })
 
-  .component('wizardStep', {
+  .component('step', {
     transclude: true,
 
     require: {
-      wizardCtrl: '^exampleWizard'
+      wizardCtrl: '^wizard'
     },
 
     bindings: {
@@ -141,52 +126,40 @@ angular.module('wizardExample', ['ngMaterial'])
           return this.includeFinish !== undefined;
         };
 
-        this.finish = function() {
-          $mdDialog.hide(this.wizardCtrl.datamodel);
-        };
-
-        this.cancel = function() {
-          $mdDialog.cancel(this.wizardCtrl.datamodel);
-        };
+        this.finish = $mdDialog.hide;
+        this.cancel = $mdDialog.cancel;
 
         this.wizardCtrl.addStep(this);
       };
     }],
 
     template:
-      '<h4 style="padding-left: 4%;" ng-show="$ctrl.selected" >' +
-      '  {{$ctrl.title}}</h4>' +
-
-      '<md-dialog-content class="wizard-content" ng-show="$ctrl.selected">' +
-      '  <div style="padding-left: 4%;" ng-transclude></div>' +
+      '<md-dialog-content ng-show="$ctrl.selected">' +
+        '<h4 layout="row" layout-align="center center">{{$ctrl.title}}</h4>' +
+        '<md-divider></md-divider>' +
+        '<div ng-transclude></div>' +
       '</md-dialog-content>' +
 
-      '<md-dialog-actions style="position: fixed; bottom: 10px;"' +
-      '  ng-show="$ctrl.selected">' +
+      '<md-dialog-actions ng-show="$ctrl.selected">' +
+        '<md-button ng-click="$ctrl.wizardCtrl.select($ctrl.previous)"' +
+            'ng-show="$ctrl.hasPrevious()">' +
 
-      '  <md-button ng-click="$ctrl.wizardCtrl.select($ctrl.previous)"' +
-      '      ng-show="$ctrl.hasPrevious()">' +
+          '<< {{$ctrl.previousTitle}}' +
+        '</md-button>' +
 
-      '    << {{$ctrl.previousTitle}}' +
-      '  </md-button>' +
+        '<md-button ng-click="$ctrl.wizardCtrl.select($ctrl.next)"' +
+            'ng-show="$ctrl.hasNext()">' +
 
-      '  <md-button ng-click="$ctrl.wizardCtrl.select($ctrl.next)"' +
-      '      ng-show="$ctrl.hasNext()">' +
+          '{{$ctrl.nextTitle}} >>' +
+        '</md-button>' +
 
-      '    {{$ctrl.nextTitle}} >>' +
-      '  </md-button>' +
+        '<md-button ng-click="$ctrl.cancel()" class="md-raised">' +
+          'Cancel</md-button>' +
 
-      '  <div style="position: fixed; right: 20px;">' +
-      '    <md-button ng-click="$ctrl.cancel()"' +
-      '      class="md-raised">Cancel</md-button>' +
+        '<md-button ng-show="$ctrl.hasFinish()" class="md-raised md-primary"' +
+            'ng-click="$ctrl.finish()">' +
 
-      '    <md-button ng-show="$ctrl.hasFinish()"' +
-      '        class="md-raised md-primary"' +
-      '        ng-click="$ctrl.finish()">' +
-
-      '      {{$ctrl.finishText}}' +
-      '    </md-button>' +
-      '  </div>' +
-
+          '{{$ctrl.finishText}}' +
+        '</md-button>' +
       '</md-dialog-actions>'
   });
